@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "opentmux"
+  ],
+  "permission": {
+    "external_directory": {
+      "~/.local/share/opencode/repos/github.com/**": "allow"
+    }
+  },
+  "references": {
+    "git-worktree-runner": {
+      "repository": "https://github.com/coderabbitai/git-worktree-runner",
+      "description": "Stephen's current single-repo git worktree tool (bash). Graft borrows its ideas: config stored in git config rather than committed files, copy include/exclude helpers for bootstrapping worktrees with non-git-tracked assets like .env files, stable --porcelain key<TAB>value output, and post-create hooks. Read it for those conventions; it is per-repo scoped and has no concept of cross-repo workstreams, which is graft's core purpose."
+    },
+    "grove": {
+      "repository": "https://github.com/nicksenap/grove",
+      "description": "Go/Cobra CLI that orchestrates multi-repo git worktree workspaces: one workspace directory, one branch, one worktree per repo. It is graft's primary structural model — global config with repo_dirs/workspace_dir/presets/hooks, lifecycle hooks, and an e2e test harness convention (compiled binary against real git fixtures in an isolated temp HOME). Its docs live in openwiki/. Graft deliberately deviates: no central state.json (colocated per-stem manifest instead), no committed per-repo .grove.toml setup (repos' own git post-checkout hooks instead), hook context via env vars not {placeholder} interpolation, no fetch in the create path. Grove also has NO push command despite appearance - its sync is rebase-only."
+    },
+    "laio": {
+      "repository": "https://github.com/ck3mp3r/laio-cli",
+      "description": "tmux session manager supporting dynamic layouts and templates with variable injection. Relevant as graft's downstream consumer: the intended workflow is an fzf launcher that reads graft's porcelain output (stem paths, branches, repos) and uses laio-style templating to create tmux sessions inside new stems. Graft never manages tmux itself; this integration defines why graft's machine-readable output is a versioned contract."
+    }
+  }
+}
