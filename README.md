@@ -23,8 +23,8 @@ nix develop
 
 ## Configuration
 
-Graft reads `~/.config/graft.toml` (or `$XDG_CONFIG_HOME/graft.toml`). Create
-it manually:
+Graft reads `~/.config/graft/config.toml` (or
+`$XDG_CONFIG_HOME/graft/config.toml`). Create it manually:
 
 ```toml
 sources = ["~/repos"]       # directories of pristine source checkouts
@@ -34,17 +34,34 @@ stems = "~/workspaces"      # where workstream directories are created
 backend = ["project_a", "project_b"]
 ```
 
+The config directory is also the natural home for your hook scripts:
+
+```
+~/.config/graft/
+  config.toml
+  hooks/
+    postcreate.sh
+```
+
+Graft reads only `config.toml`; it never scans or manages `hooks/` itself.
+Upgrading from an earlier version? Move the old file:
+`mv ~/.config/graft.toml ~/.config/graft/config.toml`.
+
 `sources` directories are scanned one level deep for git repos; a repo is
 identified by its directory name.
 
 ## Lifecycle hooks
 
 Graft runs one global `postcreate` hook after growing a stem. Define it in
-`graft.toml`:
+`config.toml`:
 
 ```toml
 postcreate = "echo working on $GRAFT_BRANCH > $GRAFT_PATH/NOTES.md"
 ```
+
+To keep scripts in the config directory, point the command at them, e.g.
+`postcreate = "~/.config/graft/hooks/postcreate.sh"` (the hook runs through
+the shell, so `~` expands).
 
 The hook runs with the stem directory as cwd and receives context via
 environment variables: `GRAFT_WORKSPACE` (stem name), `GRAFT_PATH` (absolute

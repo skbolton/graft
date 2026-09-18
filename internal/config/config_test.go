@@ -10,11 +10,11 @@ import (
 func writeConfig(t *testing.T, home, content string) {
 	t.Helper()
 
-	dir := filepath.Join(home, ".config")
+	dir := filepath.Join(home, ".config", "graft")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf("mkdir config dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "graft.toml"), []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte(content), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
 }
@@ -60,7 +60,7 @@ func TestLoadMissingFile(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing config")
 	}
-	if !strings.Contains(err.Error(), ".config/graft.toml") {
+	if !strings.Contains(err.Error(), ".config/graft/config.toml") {
 		t.Errorf("error should identify expected path, got: %v", err)
 	}
 	if !strings.Contains(err.Error(), "sources = ") {
@@ -75,11 +75,14 @@ func TestXDGConfigHome(t *testing.T) {
 	if err != nil {
 		t.Fatalf("path: %v", err)
 	}
-	if path != filepath.Join(xdg, "graft.toml") {
-		t.Errorf("path = %q, want %q", path, filepath.Join(xdg, "graft.toml"))
+	if path != filepath.Join(xdg, "graft", "config.toml") {
+		t.Errorf("path = %q, want %q", path, filepath.Join(xdg, "graft", "config.toml"))
 	}
 
 	t.Setenv("HOME", t.TempDir())
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("mkdir config dir: %v", err)
+	}
 	if err := os.WriteFile(path, []byte(`sources = ["/s"]
 stems = "/t"`), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)

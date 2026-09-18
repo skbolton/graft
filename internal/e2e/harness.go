@@ -169,15 +169,15 @@ func FixtureRepoWithHook(t *testing.T, home, name, script string) string {
 	return path
 }
 
-// WriteConfig writes graft.toml into home's config directory.
+// WriteConfig writes config.toml into home's graft config directory.
 func WriteConfig(t *testing.T, home, content string) {
 	t.Helper()
 
-	dir := filepath.Join(home, ".config")
+	dir := filepath.Join(home, ".config", "graft")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf("mkdir config dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "graft.toml"), []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config.toml"), []byte(content), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
 }

@@ -24,19 +24,19 @@ type Config struct {
 	Postcreate  string              `toml:"postcreate"`
 }
 
-// Path returns the XDG-aware location of graft.toml.
+// Path returns the XDG-aware location of the graft config directory's config.toml.
 func Path() (string, error) {
 	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
-		return filepath.Join(dir, "graft.toml"), nil
+		return filepath.Join(dir, "graft", "config.toml"), nil
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("resolve config path: %w", err)
 	}
-	return filepath.Join(home, ".config", "graft.toml"), nil
+	return filepath.Join(home, ".config", "graft", "config.toml"), nil
 }
 
-// Load reads and validates graft.toml at the XDG-aware location.
+// Load reads and validates config.toml at the XDG-aware location.
 func Load() (*Config, error) {
 	path, err := Path()
 	if err != nil {
