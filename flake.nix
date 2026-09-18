@@ -32,7 +32,9 @@
             pname = "graft";
             inherit version;
             src = ./.;
-            vendorHash = "sha256-7K17JaXFsjf163g5PXCb5ng2gYdotnZ2IDKk8KFjNj0=";
+            vendorHash = "sha256-/hdb5+3IMAUunZOLPd9MsSwu7N9q5rfgpC7oc9g2hkE=";
+
+            nativeBuildInputs = [ pkgs.git ];
 
             ldflags = [
               "-s"
@@ -52,9 +54,10 @@
             type = "app";
             program = "${pkgs.writeShellScriptBin "graft-check" ''
               set -euo pipefail
-              export PATH="${pkgs.go}/bin:$PATH"
+              export PATH="${pkgs.nix}/bin:${pkgs.go}/bin:$PATH"
               go vet ./...
               go test ./...
+              nix build .#graft
             ''}/bin/graft-check";
           };
 

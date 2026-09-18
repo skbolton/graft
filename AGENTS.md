@@ -77,9 +77,12 @@ passes:
 nix run .#check
 ```
 
-This runs `go vet ./...` and `go test ./...` against your working tree. Do not
-declare a task complete, summarize results, or hand work back to the user
-without a passing check. Run it again after any follow-up edits.
+This runs `go vet ./...` and `go test ./...`, then builds the `graft` package
+through the flake (`nix build .#graft`) against your working tree. The build
+gate catches packaging drift — dependency changes that need a `vendorHash`
+update, sandbox inputs the tests depend on — that vet and tests alone miss.
+Do not declare a task complete, summarize results, or hand work back to the
+user without a passing check. Run it again after any follow-up edits.
 
 ## Implementation conventions
 
