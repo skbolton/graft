@@ -21,6 +21,7 @@ func newRootCommand() *cobra.Command {
 	}
 	root.Version = version
 	root.SetVersionTemplate("graft {{.Version}}\n")
+	root.AddCommand(newGrowCommand())
 	return root
 }
 
