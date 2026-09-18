@@ -88,6 +88,27 @@ func RunGraftIn(t *testing.T, dir, bin string, args ...string) (stdout, stderr s
 	return runGraftDir(t, dir, bin, args...)
 }
 
+// RunGraftEnv is RunGraft with extra environment variables set for the graft
+// process.
+func RunGraftEnv(t *testing.T, env []string, bin string, args ...string) (stdout, stderr string, exitCode int) {
+	t.Helper()
+
+	cmd := exec.Command(bin, args...)
+	cmd.Env = append(os.Environ(), env...)
+	var out, errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		var exitErr *exec.ExitError
+		if !errors.As(err, &exitErr) {
+			t.Fatalf("run graft %v: %v", args, err)
+		}
+		exitCode = exitErr.ExitCode()
+	}
+	return out.String(), errOut.String(), exitCode
+}
+
 func runGraftDir(t *testing.T, dir, bin string, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
 

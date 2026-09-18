@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -41,4 +43,86 @@ func HasWorktree(path string) bool {
 	}
 	_, err = os.Stat(strings.TrimRight(path, "/") + "/.git")
 	return err == nil
+}
+
+// WorktreePaths returns the paths of worktrees registered in repo.
+func WorktreePaths(repo string) ([]string, error) {
+	out, err := Run(repo, "worktree", "list", "--porcelain")
+	if err != nil {
+		return nil, err
+	}
+	var paths []string
+	for _, line := range strings.Split(out, "\n") {
+		if p, ok := strings.CutPrefix(line, "worktree "); ok {
+			paths = append(paths, filepath.Clean(p))
+		}
+	}
+	return paths, nil
+}
+
+// HasRef reports whether ref resolves in repo.
+func HasRef(repo, ref string) bool {
+	_, err := Run(repo, "rev-parse", "--verify", "--quiet", ref)
+	return err == nil
+}
+
+// CountRange counts commits in a rev-list range expression.
+func CountRange(repo, revRange string) (int, error) {
+	out, err := Run(repo, "rev-list", "--count", revRange)
+	if err != nil {
+		return 0, err
+	}
+	n, err := strconv.Atoi(out)
+	if err != nil {
+		return 0, fmt.Errorf("unexpected rev-list output %q in %s: %w", out, repo, err)
+	}
+	return n, nil
+}
+
+// AheadBehind counts commits behind and ahead of base in repo's HEAD.
+func AheadBehind(repo, base string) (behind, ahead int, err error) {
+	out, err := Run(repo, "rev-list", "--left-right", "--count", base+"...HEAD")
+	if err != nil {
+		return 0, 0, err
+	}
+	fields := strings.Fields(out)
+	if len(fields) != 2 {
+		return 0, 0, fmt.Errorf("unexpected rev-list output %q in %s", out, repo)
+	}
+	behind, err = strconv.Atoi(fields[0])
+	if err != nil {
+		return 0, 0, fmt.Errorf("unexpected rev-list output %q in %s: %w", out, repo, err)
+	}
+	ahead, err = strconv.Atoi(fields[1])
+	if err != nil {
+		return 0, 0, fmt.Errorf("unexpected rev-list output %q in %s: %w", out, repo, err)
+	}
+	return behind, ahead, nil
+}
+
+// IsDirty reports whether the worktree at dir has uncommitted or untracked
+// changes.
+func IsDirty(dir string) (bool, error) {
+	out, err := Run(dir, "status", "--porcelain")
+	if err != nil {
+		return false, err
+	}
+	return out != "", nil
+}
+
+// WorktreeRemove removes the worktree at path from repo, forcing when
+// requested.
+func WorktreeRemove(repo, path string, force bool) error {
+	args := []string{"worktree", "remove"}
+	if force {
+		args = append(args, "--force")
+	}
+	_, err := Run(repo, append(args, path)...)
+	return err
+}
+
+// BranchDelete force-deletes branch in repo.
+func BranchDelete(repo, branch string) error {
+	_, err := Run(repo, "branch", "-D", branch)
+	return err
 }
