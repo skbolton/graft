@@ -74,6 +74,67 @@ func Find(stemsDir, name string) (Stem, error) {
 	return readStem(stemsDir, name), nil
 }
 
+// FindByPath resolves the stem containing path: walking up from path, the
+// first directory that is a direct child of stemsDir is the stem. The path
+// and the stems dir are symlink-resolved first so a symlinked entry into a
+// stem still matches.
+func FindByPath(stemsDir, path string) (Stem, error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return Stem{}, noStemError(path, stemsDir, err)
+	}
+	info, err := os.Stat(abs)
+	if err != nil {
+		return Stem{}, noStemError(abs, stemsDir, err)
+	}
+	if !info.IsDir() {
+		return Stem{}, noStemError(abs, stemsDir, errors.New("not a directory"))
+	}
+	resolved, err := filepath.EvalSymlinks(abs)
+	if err != nil {
+		return Stem{}, noStemError(abs, stemsDir, err)
+	}
+	stemsAbs, err := filepath.Abs(stemsDir)
+	if err != nil {
+		return Stem{}, noStemError(abs, stemsDir, err)
+	}
+	resolvedStemsDir, err := filepath.EvalSymlinks(stemsAbs)
+	if err != nil {
+		return Stem{}, noStemError(abs, stemsDir, err)
+	}
+	for p := resolved; ; {
+		if filepath.Dir(p) == resolvedStemsDir {
+			return readStem(stemsDir, filepath.Base(p)), nil
+		}
+		parent := filepath.Dir(p)
+		if parent == p {
+			return Stem{}, noStemError(abs, stemsDir, nil)
+		}
+		p = parent
+	}
+}
+
+// noStemError builds the inference-failure error, listing the available
+// stems so the user can pick a path to pass instead.
+func noStemError(path, stemsDir string, cause error) error {
+	found, err := List(stemsDir)
+	if err != nil {
+		return fmt.Errorf("no stem contains %s: %w", path, err)
+	}
+	if len(found) == 0 {
+		return fmt.Errorf("no stem contains %s; no stems under %s", path, stemsDir)
+	}
+	names := make([]string, 0, len(found))
+	for _, s := range found {
+		names = append(names, s.Name)
+	}
+	msg := fmt.Sprintf("no stem contains %s; stems under %s: %s", path, stemsDir, strings.Join(names, ", "))
+	if cause != nil {
+		msg += fmt.Sprintf(" (%v)", cause)
+	}
+	return errors.New(msg)
+}
+
 func readStem(stemsDir, name string) Stem {
 	dir := filepath.Join(stemsDir, name)
 	s := Stem{Name: name, Dir: dir}

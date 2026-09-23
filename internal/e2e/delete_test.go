@@ -137,7 +137,7 @@ func TestDeleteFullLoop(t *testing.T) {
 		t.Fatalf("make dirty: %v", err)
 	}
 
-	stdout, _, code := e2e.RunGraft(t, e2e.GraftBinary(t), "status", "feat-loop")
+	stdout, _, code := e2e.RunGraft(t, e2e.GraftBinary(t), "status", f.stems+"/feat-loop")
 	if code != 0 {
 		t.Fatalf("status: exit %d", code)
 	}

@@ -135,6 +135,9 @@ func TempHOME(t *testing.T) string {
 
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	// graft honors XDG_CONFIG_HOME over HOME; a host that exports it would
+	// otherwise leak its graft.toml into isolated fixtures.
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
 	return home
 }
 

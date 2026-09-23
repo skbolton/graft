@@ -100,14 +100,26 @@ func AheadBehind(repo, base string) (behind, ahead int, err error) {
 	return behind, ahead, nil
 }
 
+// StatusPorcelain returns the `git status --porcelain` output of the
+// worktree at dir, empty when clean.
+func StatusPorcelain(dir string) (string, error) {
+	return Run(dir, "status", "--porcelain")
+}
+
 // IsDirty reports whether the worktree at dir has uncommitted or untracked
 // changes.
 func IsDirty(dir string) (bool, error) {
-	out, err := Run(dir, "status", "--porcelain")
+	out, err := StatusPorcelain(dir)
 	if err != nil {
 		return false, err
 	}
 	return out != "", nil
+}
+
+// StatusLong returns the long-form `git status` output of the worktree at
+// dir, as git renders it under the user's configuration.
+func StatusLong(dir string) (string, error) {
+	return Run(dir, "status")
 }
 
 // WorktreeRemove removes the worktree at path from repo, forcing when
